@@ -1,4 +1,4 @@
-package javaExamples.Multithreading.Socket;
+package com.ducat.java.examples.multithreading.Socket;
 
 import java.io.*;
 import java.net.*;
@@ -26,7 +26,6 @@ public class Server {
         catch (IOException ex) {
         	
             System.out.println("Server exception: " + ex.getMessage());
-            ex.printStackTrace();
         }
     }
 }

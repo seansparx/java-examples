@@ -1,17 +1,18 @@
-package javaExamples.Multithreading.Socket;
+package com.ducat.java.examples.multithreading.Socket;
 
 import java.io.*;
 import java.net.*;
 
 public class ClientHandler extends Thread {
 	
-    private Socket socket;
+    private final Socket socket;
 
     public ClientHandler(Socket socket) {
     	
         this.socket = socket;
     }
 
+    @Override
     public void run() {
     	
         try (InputStream input = socket.getInputStream();

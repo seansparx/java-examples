@@ -1,10 +1,7 @@
-package javaExamples.Multithreading.CsvImport;
-
-import com.opencsv.CSVReader;
-import java.io.FileReader;
-import java.io.IOException;
+package com.ducat.java.examples.multithreading.CsvImport;
 
 public class CSVRowProcessor implements Runnable {
+    
     private final String[] row;
 
     public CSVRowProcessor(String[] row) {

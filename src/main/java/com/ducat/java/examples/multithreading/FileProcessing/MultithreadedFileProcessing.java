@@ -1,4 +1,4 @@
-package javaExamples.Multithreading.FileProcessing;
+package com.ducat.java.examples.multithreading.FileProcessing;
 
 import java.io.File;
 import java.util.ArrayList;

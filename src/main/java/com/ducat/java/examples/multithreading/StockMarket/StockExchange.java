@@ -1,4 +1,4 @@
-package javaExamples.Multithreading.StockMarket;
+package com.ducat.java.examples.multithreading.StockMarket;
 
 import java.util.Random;
 
@@ -17,16 +17,16 @@ public class StockExchange implements Runnable {
         Random random = new Random();
         
         try {
-        	
+            
             while (true) {
             	
                 // Simulate getting a new stock price every second
                 int stockPrice = 100 + random.nextInt(50);  // Random stock price between 100 and 150
                 System.out.println(exchangeName + " - Stock Price: $" + stockPrice);
-
                 // Sleep for 1 second to simulate real-time data fetching
-                Thread.sleep(1000);
+                Thread.sleep(100);
             }
+            
         } 
         catch (InterruptedException e) {
         	

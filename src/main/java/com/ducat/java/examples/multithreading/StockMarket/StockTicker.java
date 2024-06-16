@@ -1,4 +1,4 @@
-package javaExamples.Multithreading.StockMarket;
+package com.ducat.java.examples.multithreading.StockMarket;
 
 public class StockTicker {
 	
@@ -13,5 +13,6 @@ public class StockTicker {
             Thread thread = new Thread(new StockExchange(exchange));
             thread.start();
         }
+        
     }
 }

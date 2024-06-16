@@ -1,4 +1,4 @@
-package javaExamples.Multithreading.WebScraper;
+package com.ducat.java.examples.multithreading.WebScraper;
 
 import java.io.BufferedReader;
 import java.io.InputStreamReader;

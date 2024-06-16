@@ -29,16 +29,20 @@ public class DatabaseUtils {
     }
 
     
-    public static List<String> getColumnNames(Connection connection, String databaseName, String tableName) throws SQLException {
+    public static List<ColumnInfo> getColumnNames(Connection connection, String databaseName, String tableName) throws SQLException {
         
-        List<String> columnNames = new ArrayList<>();        
+        List<ColumnInfo> columnNames = new ArrayList<>();        
         DatabaseMetaData metaData = connection.getMetaData();
         
         try (ResultSet columns = metaData.getColumns(databaseName, null, tableName, "%")) {
-            
+                        
             while (columns.next()) {
                 
-                columnNames.add(columns.getString("COLUMN_NAME"));
+                String columnName = columns.getString("COLUMN_NAME");
+                String dataType = columns.getString("TYPE_NAME");
+                int columnSize = columns.getInt("COLUMN_SIZE");
+                
+                columnNames.add(new ColumnInfo(columnName, dataType, columnSize));
             }
         }
         
@@ -51,6 +55,42 @@ public class DatabaseUtils {
         try (Statement statement = connection.createStatement()) {
             
             statement.executeUpdate(createTableSQL);
+        }
+    }
+    
+    
+    public static class ColumnInfo {
+        
+        private final String columnName;
+        private final String dataType;
+        private final int columnSize;
+
+        public ColumnInfo(String columnName, String dataType, int columnSize) {
+            
+            this.columnName = columnName;
+            this.dataType = dataType;
+            this.columnSize = columnSize;
+        }
+
+        public String getColumnName() {
+            
+            return columnName;
+        }
+
+        public String getDataType() {
+            
+            return dataType;
+        }
+        
+        public int getColumnSize() {
+            
+            return columnSize;
+        }
+        
+        @Override
+        public String toString() {
+            
+            return columnName + " " + dataType + "(" + columnSize + ")";
         }
     }
 }

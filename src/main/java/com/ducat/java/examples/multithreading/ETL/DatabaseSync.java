@@ -12,12 +12,12 @@ public class DatabaseSync {
     private static final String TARGET_DB_URL = "jdbc:mysql://localhost:3306/target_db";
     private static final String USER = "root";
     private static final String PASSWORD = "Sparx@123";
-    private static final int THREAD_POOL_SIZE = 5;
+    private static final int THREAD_POOL_SIZE = 10;
 
     public static void main(String[] args) {
         
-        Connection sourceConnection = null;
-        Connection targetConnection = null;
+        Connection sourceConnection;
+        Connection targetConnection;
         
         ExecutorService executorService = Executors.newFixedThreadPool(THREAD_POOL_SIZE);
 
@@ -31,6 +31,7 @@ public class DatabaseSync {
             List<String> tables = DatabaseUtils.getTableNames(sourceConnection, databaseName);
 
             for (String table : tables) {
+                
                 DataTransferTask task = new DataTransferTask(sourceConnection, targetConnection, databaseName, table);
                 executorService.submit(task);
             }

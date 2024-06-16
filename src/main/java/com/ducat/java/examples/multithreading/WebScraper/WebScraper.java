@@ -1,6 +1,7 @@
 package com.ducat.java.examples.multithreading.WebScraper;
 
 import java.io.BufferedReader;
+import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
@@ -27,15 +28,14 @@ public class WebScraper implements Runnable {
             
             if (responseCode == 200) {
             	
-                BufferedReader in = new BufferedReader(new InputStreamReader(connection.getInputStream()));
-                String inputLine;
-                StringBuilder content = new StringBuilder();
-
-                while ((inputLine = in.readLine()) != null) {
-                    content.append(inputLine);
+                StringBuilder content;
+                try (BufferedReader in = new BufferedReader(new InputStreamReader(connection.getInputStream()))) {
+                    String inputLine;
+                    content = new StringBuilder();
+                    while ((inputLine = in.readLine()) != null) {
+                        content.append(inputLine);
+                    }
                 }
-
-                in.close();
                 connection.disconnect();
 
                 System.out.println("Data from " + urlString + ":");
@@ -45,7 +45,7 @@ public class WebScraper implements Runnable {
                 System.out.println("Failed to fetch data from " + urlString);
             }
         } 
-        catch (Exception e) {
+        catch (IOException e) {
             System.out.println("Error fetching data from " + urlString + ": " + e.getMessage());
         }
     }

@@ -2,34 +2,64 @@ package com.ducat.java.examples.multithreading.ETL;
 
 import java.sql.Connection;
 import java.sql.SQLException;
+import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-/**
- *
- * @author rakesh
- */
 public class DatabaseSync {
+    
     private static final String SOURCE_DB_URL = "jdbc:mysql://localhost:3306/source_db";
     private static final String TARGET_DB_URL = "jdbc:mysql://localhost:3306/target_db";
-    private static final String USER = "user";
-    private static final String PASSWORD = "password";
+    private static final String USER = "root";
+    private static final String PASSWORD = "Sparx@123";
     private static final int THREAD_POOL_SIZE = 5;
-    private static final String[] TABLES = {"table1", "table2", "table3"}; // List of tables to sync
 
     public static void main(String[] args) {
+        
+        Connection sourceConnection = null;
+        Connection targetConnection = null;
+        
         ExecutorService executorService = Executors.newFixedThreadPool(THREAD_POOL_SIZE);
 
-        try (Connection sourceConnection = DatabaseUtils.getConnection(SOURCE_DB_URL, USER, PASSWORD);
-             Connection targetConnection = DatabaseUtils.getConnection(TARGET_DB_URL, USER, PASSWORD)) {
+        try {
+            
+            sourceConnection = DatabaseUtils.getConnection(SOURCE_DB_URL, USER, PASSWORD);
+            targetConnection = DatabaseUtils.getConnection(TARGET_DB_URL, USER, PASSWORD);
 
-            for (String table : TABLES) {
-                DataTransferTask task = new DataTransferTask(sourceConnection, targetConnection, table);
+            // Specify the database name and table name you want to fetch columns for
+            String databaseName = "source_db";
+            List<String> tables = DatabaseUtils.getTableNames(sourceConnection, databaseName);
+
+            for (String table : tables) {
+                DataTransferTask task = new DataTransferTask(sourceConnection, targetConnection, databaseName, table);
                 executorService.submit(task);
             }
-        } catch (SQLException e) {
+        } 
+        catch (SQLException e) {
             e.printStackTrace();
-        } finally {
+        } 
+        finally {
+            
+//            if (sourceConnection != null) {
+//                
+//                try {
+//                    sourceConnection.close();
+//                } 
+//                catch (SQLException e) {
+//                    e.printStackTrace();
+//                }
+//            }
+//            
+//            if (targetConnection != null) {
+//                
+//                try {
+//                    targetConnection.close();
+//                } 
+//                catch (SQLException e) {
+//                    e.printStackTrace();
+//                }
+//            }
+            
             executorService.shutdown();
         }
     }

@@ -80,31 +80,10 @@ public class DatabaseUtils {
                 }
             }
         }
-        System.out.println(columns);
+        
         return columns;
     }
 
-    
-//    public static List<ColumnInfo> getColumnNames(Connection connection, String databaseName, String tableName) throws SQLException {
-//        
-//        List<ColumnInfo> columnNames = new ArrayList<>();        
-//        DatabaseMetaData metaData = connection.getMetaData();
-//        
-//        try (ResultSet columns = metaData.getColumns(databaseName, null, tableName, "%")) {
-//                        
-//            while (columns.next()) {
-//                
-//                String columnName = columns.getString("COLUMN_NAME");
-//                String dataType = columns.getString("TYPE_NAME");
-//                int columnSize = columns.getInt("COLUMN_SIZE");
-//                
-//                columnNames.add(new ColumnInfo(columnName, dataType, columnSize));
-//            }
-//        }
-//        
-//        return columnNames;
-//    }
-    
     
     public static void createTableIfNotExists(Connection connection, String createTableSQL) throws SQLException {
         

@@ -34,14 +34,14 @@ public class DatabaseSync {
             SchemaSyncTask schemaSyncTask = new SchemaSyncTask(sourceConnection, targetConnection, sourceDatabase, targetDatabase);
             executorService.submit(schemaSyncTask);
             
-//            // Synchronize data transfer for each table
-//            List<String> tables = DatabaseUtils.getTableNames(sourceConnection, sourceDatabase);
-//
-//            for (String table : tables) {
-//                
-//                DataTransferTask task = new DataTransferTask(sourceConnection, targetConnection, sourceDatabase, table);
-//                executorService.submit(task);
-//            }
+            // Synchronize data transfer for each table
+            List<String> tables = DatabaseUtils.getTableNames(sourceConnection, sourceDatabase);
+
+            for (String table : tables) {
+                
+                DataTransferTask task = new DataTransferTask(sourceConnection, targetConnection, sourceDatabase, table);
+                executorService.submit(task);
+            }
         } 
         catch (SQLException e) {
             e.printStackTrace();

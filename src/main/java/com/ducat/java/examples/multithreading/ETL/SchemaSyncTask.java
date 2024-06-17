@@ -31,34 +31,25 @@ public class SchemaSyncTask implements Runnable {
             Map<String, List<DatabaseUtils.ColumnInfo>> targetSchema = DatabaseUtils.getDatabaseSchema(targetConnection, targetDatabase);
 
             for (String tableName : sourceSchema.keySet()) {
-                
-                //System.out.println(sourceSchema);
-                
+                                
                 if (!targetSchema.containsKey(tableName)) {
-                    //System.out.println("IF");
+                    
                     // Table does not exist in target, create it
                     String createTableSQL = buildCreateTableSQL(tableName, sourceSchema.get(tableName));
                     DatabaseUtils.createTableIfNotExists(targetConnection, createTableSQL);
                 } 
                 else {
                     
-                    //System.out.println("ELSE");
                     // Table exists, check for column differences
                     List<DatabaseUtils.ColumnInfo> sourceColumns = sourceSchema.get(tableName);
                     List<DatabaseUtils.ColumnInfo> targetColumns = targetSchema.get(tableName);
 
                     for (DatabaseUtils.ColumnInfo sourceColumn : sourceColumns) {
-                        
-//                        System.out.println(sourceColumns);
-//                        System.out.println(targetColumns);
-//                        System.out.println("XXXXXXX");
-                        
+                                                
                         String alterColumnSQL;
                         
                         // Column does not exist in target, add it.
                         if (!targetColumns.toString().contains(sourceColumn.getColumnName().trim())) {
-                            
-                            //System.out.println("IF");
                             
                             alterColumnSQL = buildAddColumnSQL(tableName, sourceColumn);
                         }
@@ -66,13 +57,9 @@ public class SchemaSyncTask implements Runnable {
                         // Column name exists in target, but something miss matched. alter it.
                         else {
                             
-                            //System.out.println("ELSE");
-                            
                             alterColumnSQL = buildAlterColumnSQL(tableName, sourceColumn);
                         }
-                        
-                        //System.out.println(alterColumnSQL);
-                        
+                                                
                         try (PreparedStatement stmt = targetConnection.prepareStatement(alterColumnSQL)) {
                             stmt.execute();
                         }
@@ -85,28 +72,6 @@ public class SchemaSyncTask implements Runnable {
         }
     }
 
-//    private String buildCreateTableSQL(String tableName, List<DatabaseUtils.ColumnInfo> columnInfos) {
-//        
-//        StringBuilder createTableSQL = new StringBuilder("CREATE TABLE IF NOT EXISTS ");
-//        createTableSQL.append(tableName).append(" (");
-//
-//        for (int i = 0; i < columnInfos.size(); i++) {
-//            
-//            DatabaseUtils.ColumnInfo columnInfo = columnInfos.get(i);
-//            createTableSQL.append(columnInfo.getColumnName()).append(" ").append(columnInfo.getDataType());
-//            
-//            if (columnInfo.getDataType().equalsIgnoreCase("VARCHAR") || columnInfo.getDataType().equalsIgnoreCase("CHAR")) {
-//                createTableSQL.append("(").append(columnInfo.getColumnSize()).append(")");
-//            }
-//            
-//            if (i < columnInfos.size() - 1) {
-//                createTableSQL.append(", ");
-//            }
-//        }
-//        
-//        createTableSQL.append(");");
-//        return createTableSQL.toString();
-//    }
     
     private String buildCreateTableSQL(String tableName, List<DatabaseUtils.ColumnInfo> columnInfos) {
         
@@ -144,25 +109,7 @@ public class SchemaSyncTask implements Runnable {
         return createTableSQL.toString();
     }
 
-    
-//    private String buildAddColumnSQL(String tableName, DatabaseUtils.ColumnInfo columnInfo) {
-//        
-//        // ALTER TABLE app_ads ADD COLUMN id INT
-//        
-//        StringBuilder addColumnSQL = new StringBuilder("ALTER TABLE ");
-//        addColumnSQL.append(tableName).append(" ADD COLUMN ");
-//        addColumnSQL.append(columnInfo.getColumnName()).append(" ").append(columnInfo.getDataType());
-//        
-//        if (columnInfo.getDataType().equalsIgnoreCase("VARCHAR") 
-//                || columnInfo.getDataType().equalsIgnoreCase("CHAR")
-//                    || columnInfo.getDataType().equalsIgnoreCase("INT")) {
-//            
-//            addColumnSQL.append("(").append(columnInfo.getColumnSize()).append(") NULL DEFAULT NULL");
-//        }
-//        
-//        return addColumnSQL.toString();
-//    }
-    
+        
     private String buildAddColumnSQL(String tableName, DatabaseUtils.ColumnInfo columnInfo) {
         
         StringBuilder addColumnSQL = new StringBuilder("ALTER TABLE ");
@@ -178,6 +125,7 @@ public class SchemaSyncTask implements Runnable {
         
         return addColumnSQL.toString();
     }
+    
     
     private String buildAlterColumnSQL(String tableName, DatabaseUtils.ColumnInfo columnInfo) {
         

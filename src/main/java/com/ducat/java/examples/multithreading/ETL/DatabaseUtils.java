@@ -2,7 +2,10 @@ package com.ducat.java.examples.multithreading.ETL;
 
 import java.sql.*;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 
 public class DatabaseUtils {
 
@@ -10,7 +13,7 @@ public class DatabaseUtils {
         
         return DriverManager.getConnection(url, user, password);
     }
-
+    
     
     public static List<String> getTableNames(Connection connection, String databaseName) throws SQLException {
         
@@ -27,27 +30,80 @@ public class DatabaseUtils {
         
         return tableNames;
     }
-
     
-    public static List<ColumnInfo> getColumnNames(Connection connection, String databaseName, String tableName) throws SQLException {
+    
+    public static Map<String, List<ColumnInfo>> getDatabaseSchema(Connection connection, String databaseName) throws SQLException {
         
-        List<ColumnInfo> columnNames = new ArrayList<>();        
+        Map<String, List<ColumnInfo>> schema = new HashMap<>();
+        List<String> tables = getTableNames(connection, databaseName);
+        
+        for (String table : tables) {
+            schema.put(table, getColumnNamesWithDataTypesAndSizes(connection, databaseName, table));
+        }
+        
+        return schema;
+    }
+    
+    
+    public static List<ColumnInfo> getColumnNamesWithDataTypesAndSizes(Connection connection, String databaseName, String tableName) throws SQLException {
+        
+        List<ColumnInfo> columns = new ArrayList<>();
         DatabaseMetaData metaData = connection.getMetaData();
         
-        try (ResultSet columns = metaData.getColumns(databaseName, null, tableName, "%")) {
-                        
-            while (columns.next()) {
+        // Fetch columns.
+        try (ResultSet rs = metaData.getColumns(databaseName, null, tableName, null)) {
+            
+            while (rs.next()) {
                 
-                String columnName = columns.getString("COLUMN_NAME");
-                String dataType = columns.getString("TYPE_NAME");
-                int columnSize = columns.getInt("COLUMN_SIZE");
+                String columnName  = rs.getString("COLUMN_NAME");
+                String dataType    = rs.getString("TYPE_NAME");
+                int columnSize     = rs.getInt("COLUMN_SIZE");
                 
-                columnNames.add(new ColumnInfo(columnName, dataType, columnSize));
+                columns.add(new ColumnInfo(columnName, dataType, columnSize, false));
             }
         }
         
-        return columnNames;
+        // Fetch primary keys
+        try (ResultSet rs = metaData.getPrimaryKeys(databaseName, null, tableName)) {
+            
+            while (rs.next()) {
+                
+                String columnName = rs.getString("COLUMN_NAME");
+                
+                for (ColumnInfo column : columns) {
+                    
+                    if (column.getColumnName().equals(columnName)) {
+                        
+                        column.setPrimaryKey(true);
+                        break;
+                    }
+                }
+            }
+        }
+        System.out.println(columns);
+        return columns;
     }
+
+    
+//    public static List<ColumnInfo> getColumnNames(Connection connection, String databaseName, String tableName) throws SQLException {
+//        
+//        List<ColumnInfo> columnNames = new ArrayList<>();        
+//        DatabaseMetaData metaData = connection.getMetaData();
+//        
+//        try (ResultSet columns = metaData.getColumns(databaseName, null, tableName, "%")) {
+//                        
+//            while (columns.next()) {
+//                
+//                String columnName = columns.getString("COLUMN_NAME");
+//                String dataType = columns.getString("TYPE_NAME");
+//                int columnSize = columns.getInt("COLUMN_SIZE");
+//                
+//                columnNames.add(new ColumnInfo(columnName, dataType, columnSize));
+//            }
+//        }
+//        
+//        return columnNames;
+//    }
     
     
     public static void createTableIfNotExists(Connection connection, String createTableSQL) throws SQLException {
@@ -64,12 +120,14 @@ public class DatabaseUtils {
         private final String columnName;
         private final String dataType;
         private final int columnSize;
+        private boolean primaryKey;
 
-        public ColumnInfo(String columnName, String dataType, int columnSize) {
+        public ColumnInfo(String columnName, String dataType, int columnSize, boolean primaryKey) {
             
             this.columnName = columnName;
             this.dataType = dataType;
             this.columnSize = columnSize;
+            this.primaryKey = primaryKey;
         }
 
         public String getColumnName() {
@@ -87,10 +145,36 @@ public class DatabaseUtils {
             return columnSize;
         }
         
+        public boolean isPrimaryKey() {
+            
+            return this.primaryKey;
+        }
+
+        public void setPrimaryKey(boolean primaryKey) {
+            
+            this.primaryKey = primaryKey;
+        }
+        
         @Override
         public String toString() {
             
             return columnName + " " + dataType + "(" + columnSize + ")";
+        }
+        
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) return true;
+            if (o == null || getClass() != o.getClass()) return false;
+            ColumnInfo that = (ColumnInfo) o;
+            return columnSize == that.columnSize &&
+                    primaryKey == that.primaryKey &&
+                    Objects.equals(columnName, that.columnName) &&
+                    Objects.equals(dataType, that.dataType);
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hash(columnName, dataType, columnSize, primaryKey);
         }
     }
 }

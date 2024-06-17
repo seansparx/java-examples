@@ -19,71 +19,62 @@ public class DataTransferTask implements Runnable {
     private final String tableName;
     private final List<DatabaseUtils.ColumnInfo> columnInfos;
 
-    public DataTransferTask(Connection sourceConnection, Connection targetConnection, String databaseName, String tableName) throws SQLException {
+    public DataTransferTask(Connection sourceConnection, Connection targetConnection, String sourceDatabase, String tableName) throws SQLException {
         
         this.sourceConnection = sourceConnection;
         this.targetConnection = targetConnection;
         this.tableName = tableName;
-        this.columnInfos = DatabaseUtils.getColumnNames(sourceConnection, databaseName, tableName);
+        this.columnInfos = DatabaseUtils.getColumnNamesWithDataTypesAndSizes(sourceConnection, sourceDatabase, tableName);
     }
 
     @Override
     public void run() {
         
-        String createTableSQL = buildCreateTableSQL();
+        //String createTableSQL = buildCreateTableSQL();
         String selectSQL = buildSelectSQL();
         String insertSQL = buildInsertSQL();
         
-        //System.out.print(createTableSQL);
-
-        try {
+        //DatabaseUtils.createTableIfNotExists(targetConnection, createTableSQL);
+        
+        int offset = 0;
+        boolean moreRows = true;
+        while (moreRows) {
             
-            DatabaseUtils.createTableIfNotExists(targetConnection, createTableSQL);
-
-            int offset = 0;
-            boolean moreRows = true;
-            
-            while (moreRows) {
+            try (PreparedStatement selectStmt = sourceConnection.prepareStatement(selectSQL + " LIMIT " + CHUNK_SIZE + " OFFSET " + offset);
+                    ResultSet resultSet = selectStmt.executeQuery();
+                    PreparedStatement insertStmt = targetConnection.prepareStatement(insertSQL)) {
                 
-                try (PreparedStatement selectStmt = sourceConnection.prepareStatement(selectSQL + " LIMIT " + CHUNK_SIZE + " OFFSET " + offset);
-                     ResultSet resultSet = selectStmt.executeQuery();
-                     PreparedStatement insertStmt = targetConnection.prepareStatement(insertSQL)) {
-
-                    int rowCount = 0;
+                int rowCount = 0;
+                
+                while (resultSet.next()) {
                     
-                    while (resultSet.next()) {
+                    rowCount++;
+                    
+                    for (int i = 0; i < columnInfos.size(); i++) {
                         
-                        rowCount++;
-                        
-                        for (int i = 0; i < columnInfos.size(); i++) {
-                            
-                            insertStmt.setObject(i + 1, resultSet.getObject(columnInfos.get(i).getColumnName()));
-                        }
-                        
-                        insertStmt.addBatch();
+                        insertStmt.setObject(i + 1, resultSet.getObject(columnInfos.get(i).getColumnName()));
                     }
                     
-                    insertStmt.executeBatch();
-                    moreRows = rowCount == CHUNK_SIZE;
-                    offset += CHUNK_SIZE;
-                    
-                    // Sleep for a specified interval before processing the next chunk
-                    if (moreRows) {
-                        try {
-                            Thread.sleep(SLEEP_INTERVAL_MS);
-                        } catch (InterruptedException ex) {
-                            Logger.getLogger(DataTransferTask.class.getName()).log(Level.SEVERE, null, ex);
-                        }
+                    insertStmt.addBatch();
+                }
+                
+                insertStmt.executeBatch();
+                moreRows = rowCount == CHUNK_SIZE;
+                offset += CHUNK_SIZE;
+                
+                // Sleep for a specified interval before processing the next chunk
+                if (moreRows) {
+                    try {
+                        Thread.sleep(SLEEP_INTERVAL_MS);
+                    } catch (InterruptedException ex) {
+                        Logger.getLogger(DataTransferTask.class.getName()).log(Level.SEVERE, null, ex);
                     }
-                } 
-                catch (SQLException e) {
-                    e.printStackTrace();
-                    break;
                 }
             }
-        } 
-        catch (SQLException e) {
-            e.printStackTrace();
+            catch (SQLException e) {
+                e.printStackTrace();
+                break;
+            }
         }
     }
 

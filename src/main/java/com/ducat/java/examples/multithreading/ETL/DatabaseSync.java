@@ -16,10 +16,10 @@ public class DatabaseSync {
 
     public static void main(String[] args) {
         
+        ExecutorService executorService = Executors.newFixedThreadPool(THREAD_POOL_SIZE);
+        
         Connection sourceConnection;
         Connection targetConnection;
-        
-        ExecutorService executorService = Executors.newFixedThreadPool(THREAD_POOL_SIZE);
 
         try {
             
@@ -27,18 +27,26 @@ public class DatabaseSync {
             targetConnection = DatabaseUtils.getConnection(TARGET_DB_URL, USER, PASSWORD);
 
             // Specify the database name and table name you want to fetch columns for
-            String databaseName = "source_db";
-            List<String> tables = DatabaseUtils.getTableNames(sourceConnection, databaseName);
-
-            for (String table : tables) {
-                
-                DataTransferTask task = new DataTransferTask(sourceConnection, targetConnection, databaseName, table);
-                executorService.submit(task);
-            }
+            String sourceDatabase = "source_db";
+            String targetDatabase = "target_db";
+            
+            // Run the schema synchronization task
+            SchemaSyncTask schemaSyncTask = new SchemaSyncTask(sourceConnection, targetConnection, sourceDatabase, targetDatabase);
+            executorService.submit(schemaSyncTask);
+            
+//            // Synchronize data transfer for each table
+//            List<String> tables = DatabaseUtils.getTableNames(sourceConnection, sourceDatabase);
+//
+//            for (String table : tables) {
+//                
+//                DataTransferTask task = new DataTransferTask(sourceConnection, targetConnection, sourceDatabase, table);
+//                executorService.submit(task);
+//            }
         } 
         catch (SQLException e) {
             e.printStackTrace();
-        } 
+        }
+        
         finally {
             
 //            if (sourceConnection != null) {
